@@ -23,27 +23,34 @@ class RomanNumerals
     +2,
     +5,
     +1,
-    0, # Lydian
-    -4, # Ionian
-    -7, # Mixolydian
-    -3, # Dorian
-    -6, # Aeolian
-    -2, # Phrygian
-    -5, # Locrian
+    0,
+    -4,
+    -7,
+    -3,
+    -6,
+    -2,
+    -5,
     -1,
     -4,
   ].deep_freeze
 
-  ACCIDENTAL_ORDER_KEY_NAMES = {
-    0 => "Lydian",
-    -4 => "Ionian",
-    7 => "Ionian",
-    -7 => "Mixolydian",
-    -3 => "Dorian",
-    -6 => "Aeolian",
-    -2 => "Phrygian",
-    -5 => "Locrian",
-  }.deep_freeze
+  ACCIDENTAL_ORDER_KEY_NAMES = [
+    "Sharp Ionian",
+    "Sharp Mixolydian",
+    "Sharp Dorian",
+    "Sharp Aeolian",
+    "Sharp Phrygian",
+    "Sharp Locrian",
+    "Lydian",
+    "Ionian",
+    "Mixolydian",
+    "Dorian",
+    "Aeolian",
+    "Phrygian",
+    "Locrian",
+    "Flat Lydian",
+    "Flat Ionian",
+  ].deep_freeze
 
   private_constant :TYPE_MAJOR
   private_constant :TYPE_MINOR
@@ -60,7 +67,7 @@ class RomanNumerals
       table.style = {all_separators: true}
 
       roman_numerals = generate_all_roman_numerals
-      ACCIDENTAL_ORDER.zip(roman_numerals).each do |accidental_order, roman_numerals|
+      ACCIDENTAL_ORDER.zip(roman_numerals).each.with_index do |(accidental_order, roman_numerals), index|
         accidental_change = if accidental_order.positive?
                               " (##{accidental_order.abs})"
                             elsif accidental_order.negative?
@@ -69,7 +76,8 @@ class RomanNumerals
                               ""
                             end
 
-        key_name = ACCIDENTAL_ORDER_KEY_NAMES[accidental_order] || "Unknown"
+        key_name = ACCIDENTAL_ORDER_KEY_NAMES[index]
+        raise "Must specify key name" if key_name.nil?
         key_name = key_name + accidental_change
 
         table << [key_name, *roman_numerals]
