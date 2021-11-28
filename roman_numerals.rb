@@ -1,9 +1,10 @@
 require 'ice_nine'
 require 'ice_nine/core_ext/object'
+require "terminal-table"
 
 class RomanNumerals
-  def output_roman_numerals
-    roman_numerals = generate_all_roman_numerals
+  def self.output_roman_numerals
+    puts generate_table
   end
 
   private
@@ -33,34 +34,70 @@ class RomanNumerals
     -4,
   ].deep_freeze
 
+  ACCIDENTAL_ORDER_KEY_NAMES = {
+    0 => "Lydian",
+    -4 => "Ionian",
+    7 => "Ionian",
+    -7 => "Mixolydian",
+    -3 => "Dorian",
+    -6 => "Aeolian",
+    -2 => "Phrygian",
+    -5 => "Locrian",
+  }.deep_freeze
+
   private_constant :TYPE_MAJOR
   private_constant :TYPE_MINOR
   private_constant :TYPE_DIMINISHED
   private_constant :TYPES
   private_constant :LYDIAN_TYPES
   private_constant :ACCIDENTAL_ORDER
+  private_constant :ACCIDENTAL_ORDER_KEY_NAMES
 
   class << self
+    def generate_table
+      table = Terminal::Table.new
+      table.headings = ["Key Name", "1", "2", "3", "4", "5", "6", "7"]
+      table.style = {all_separators: true}
+
+      roman_numerals = generate_all_roman_numerals
+      ACCIDENTAL_ORDER.zip(roman_numerals).each do |accidental_order, roman_numerals|
+        accidental_change = if accidental_order.positive?
+                              " (##{accidental_order.abs})"
+                            elsif accidental_order.negative?
+                              " (b#{accidental_order.abs})"
+                            else
+                              ""
+                            end
+
+        key_name = ACCIDENTAL_ORDER_KEY_NAMES[accidental_order] || "Unknown"
+        key_name = key_name + accidental_change
+
+        table << [key_name, *roman_numerals]
+      end
+
+      return table
+    end
+
     def generate_all_roman_numerals
       lydian_index = ACCIDENTAL_ORDER.index(0)
 
       # generate the flattened keys
-      types = LYDIAN_TYPES.clone
-      accidentals = LYDIAN_ACCIDENTALS.clone
+      types = LYDIAN_TYPES.dup
+      accidentals = LYDIAN_ACCIDENTALS.dup
       flattened_result = ACCIDENTAL_ORDER[lydian_index + 1..].map do |degree_change|
         generate_roman_numerals(types, accidentals, degree_change, 4)
       end
 
       # generate the sharpened keys
-      types = LYDIAN_TYPES.clone
-      accidentals = LYDIAN_ACCIDENTALS.clone
+      types = LYDIAN_TYPES.dup
+      accidentals = LYDIAN_ACCIDENTALS.dup
       sharpened_result = ACCIDENTAL_ORDER[..lydian_index - 1].reverse.map do |degree_change|
         generate_roman_numerals(types, accidentals, degree_change, -4)
       end
 
       return [
         *sharpened_result.reverse,
-        generate_roman_numerals(LYDIAN_TYPES.clone, LYDIAN_ACCIDENTALS.clone, 0, 0),
+        generate_roman_numerals(LYDIAN_TYPES.dup, LYDIAN_ACCIDENTALS.dup, 0, 0),
         *flattened_result,
       ]
     end
