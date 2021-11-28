@@ -1,3 +1,6 @@
+require 'ice_nine'
+require 'ice_nine/core_ext/object'
+
 class RomanNumerals
   def output_roman_numerals
     roman_numerals = generate_all_roman_numerals
@@ -5,12 +8,12 @@ class RomanNumerals
 
   private
 
-  TYPE_MAJOR = "major"
-  TYPE_MINOR = "minor"
-  TYPE_DIMINISHED = "diminished"
-  TYPES = [TYPE_MAJOR, TYPE_MINOR, TYPE_DIMINISHED]
-  LYDIAN_TYPES = [TYPE_MAJOR, TYPE_MAJOR, TYPE_MINOR, TYPE_DIMINISHED, TYPE_MAJOR, TYPE_MINOR, TYPE_MINOR]
-  LYDIAN_ACCIDENTALS = [0, 0, 0, 1, 0, 0, 0]
+  TYPE_MAJOR = "major".deep_freeze
+  TYPE_MINOR = "minor".deep_freeze
+  TYPE_DIMINISHED = "diminished".deep_freeze
+  TYPES = [TYPE_MAJOR, TYPE_MINOR, TYPE_DIMINISHED].deep_freeze
+  LYDIAN_TYPES = [TYPE_MAJOR, TYPE_MAJOR, TYPE_MINOR, TYPE_DIMINISHED, TYPE_MAJOR, TYPE_MINOR, TYPE_MINOR].deep_freeze
+  LYDIAN_ACCIDENTALS = [0, 0, 0, 1, 0, 0, 0].deep_freeze
 
   ACCIDENTAL_ORDER = [
     +7,
@@ -28,7 +31,7 @@ class RomanNumerals
     -5, # Locrian
     -1,
     -4,
-  ]
+  ].deep_freeze
 
   private_constant :TYPE_MAJOR
   private_constant :TYPE_MINOR
