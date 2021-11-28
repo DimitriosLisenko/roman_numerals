@@ -73,7 +73,8 @@ class RomanNumerals
     def generate_secondary_chords_table
       table = Terminal::Table.new
       table.title = "Secondary Chords"
-      table.headings = ["", "1/x", "2/x", "3/x", "4/x", "5/x", "6/x", "7/x"]
+      headings = IONIAN_TYPES.map.with_index { |type, index| "#{to_roman_numeral(index + 1, 0, type)}/x" }
+      table.headings = ["", *headings]
       table.style = {all_separators: true}
 
       IONIAN_TYPES.each.with_index do |type, index|
