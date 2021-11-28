@@ -136,9 +136,7 @@ class RomanNumerals
       ]
     end
 
-    def generate_roman_numerals(types, accidentals, degree_change, types_rotation, numbers_rotation)
-      types.rotate!(types_rotation)
-
+    def update_accidentals_by_degree_change!(accidentals, degree_change)
       if degree_change.positive?
         change_accidental_index = degree_change.abs - 1
         accidentals[change_accidental_index] += 1
@@ -146,8 +144,15 @@ class RomanNumerals
         change_accidental_index = degree_change.abs - 1
         accidentals[change_accidental_index] -= 1
       end
+    end
+
+    def generate_roman_numerals(types, accidentals, degree_change, types_rotation, numbers_rotation)
+      types.rotate!(types_rotation)
+
+      update_accidentals_by_degree_change!(accidentals, degree_change)
 
       numbers = (1..7).to_a.rotate(numbers_rotation)
+      accidentals = accidentals.rotate(numbers_rotation)
       roman_numerals = numbers.map.with_index do |number, index|
         to_roman_numeral(number, accidentals[index], types[index])
       end
