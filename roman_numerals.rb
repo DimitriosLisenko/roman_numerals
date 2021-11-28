@@ -3,8 +3,12 @@ require 'ice_nine/core_ext/object'
 require "terminal-table"
 
 class RomanNumerals
-  def self.output_roman_numerals
-    puts generate_table
+  def self.output_secondary_chords
+    puts generate_secondary_chords_table
+  end
+
+  def self.output_borrowed_chords
+    puts generate_borrowed_chords_table
   end
 
   private
@@ -15,6 +19,8 @@ class RomanNumerals
   TYPES = [TYPE_MAJOR, TYPE_MINOR, TYPE_DIMINISHED].deep_freeze
   LYDIAN_TYPES = [TYPE_MAJOR, TYPE_MAJOR, TYPE_MINOR, TYPE_DIMINISHED, TYPE_MAJOR, TYPE_MINOR, TYPE_MINOR].deep_freeze
   LYDIAN_ACCIDENTALS = [0, 0, 0, 1, 0, 0, 0].deep_freeze
+  IONIAN_TYPES = [TYPE_MAJOR, TYPE_MINOR, TYPE_MINOR, TYPE_MAJOR, TYPE_MAJOR, TYPE_MINOR, TYPE_DIMINISHED].deep_freeze
+  IONIAN_ACCIDENTALS = [0, 0, 0, 0, 0, 0, 0].deep_freeze
 
   ACCIDENTAL_ORDER = [
     +7,
@@ -57,13 +63,32 @@ class RomanNumerals
   private_constant :TYPE_DIMINISHED
   private_constant :TYPES
   private_constant :LYDIAN_TYPES
+  private_constant :LYDIAN_ACCIDENTALS
+  private_constant :IONIAN_TYPES
+  private_constant :IONIAN_ACCIDENTALS
   private_constant :ACCIDENTAL_ORDER
   private_constant :ACCIDENTAL_ORDER_KEY_NAMES
 
   class << self
-    def generate_table
+    def generate_secondary_chords_table
       table = Terminal::Table.new
-      table.headings = ["Key Name", "1", "2", "3", "4", "5", "6", "7"]
+      table.title = "Secondary Chords"
+      table.headings = ["", "1/x", "2/x", "3/x", "4/x", "5/x", "6/x", "7/x"]
+      table.style = {all_separators: true}
+
+      IONIAN_TYPES.each.with_index do |type, index|
+        row_name = "x/#{to_roman_numeral(index + 1, 0, type)}"
+        roman_numerals = generate_roman_numerals(IONIAN_TYPES.dup, IONIAN_ACCIDENTALS.dup, 0, 0, index)
+        table << [row_name, *roman_numerals]
+      end
+
+      return table
+    end
+
+    def generate_borrowed_chords_table
+      table = Terminal::Table.new
+      table.title = "Borrowed Chords"
+      table.headings = ["Mode Name", "1", "2", "3", "4", "5", "6", "7"]
       table.style = {all_separators: true}
 
       roman_numerals = generate_all_roman_numerals
@@ -93,25 +118,25 @@ class RomanNumerals
       types = LYDIAN_TYPES.dup
       accidentals = LYDIAN_ACCIDENTALS.dup
       flattened_result = ACCIDENTAL_ORDER[lydian_index + 1..].map do |degree_change|
-        generate_roman_numerals(types, accidentals, degree_change, 4)
+        generate_roman_numerals(types, accidentals, degree_change, 4, 0)
       end
 
       # generate the sharpened keys
       types = LYDIAN_TYPES.dup
       accidentals = LYDIAN_ACCIDENTALS.dup
       sharpened_result = ACCIDENTAL_ORDER[..lydian_index - 1].reverse.map do |degree_change|
-        generate_roman_numerals(types, accidentals, degree_change, -4)
+        generate_roman_numerals(types, accidentals, degree_change, -4, 0)
       end
 
       return [
         *sharpened_result.reverse,
-        generate_roman_numerals(LYDIAN_TYPES.dup, LYDIAN_ACCIDENTALS.dup, 0, 0),
+        generate_roman_numerals(LYDIAN_TYPES.dup, LYDIAN_ACCIDENTALS.dup, 0, 0, 0),
         *flattened_result,
       ]
     end
 
-    def generate_roman_numerals(types, accidentals, degree_change, rotation)
-      types.rotate!(rotation)
+    def generate_roman_numerals(types, accidentals, degree_change, types_rotation, numbers_rotation)
+      types.rotate!(types_rotation)
 
       if degree_change.positive?
         change_accidental_index = degree_change.abs - 1
@@ -121,8 +146,9 @@ class RomanNumerals
         accidentals[change_accidental_index] -= 1
       end
 
-      roman_numerals = accidentals.zip(types).map.with_index do |accidental_zip_array, index|
-        to_roman_numeral(index + 1, *accidental_zip_array)
+      numbers = (1..7).to_a.rotate(numbers_rotation)
+      roman_numerals = numbers.map.with_index do |number, index|
+        to_roman_numeral(number, accidentals[index], types[index])
       end
 
       return roman_numerals
