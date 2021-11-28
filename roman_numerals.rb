@@ -40,6 +40,8 @@ class RomanNumerals
     -4,
   ].deep_freeze
 
+  BORROWED_CHORDS_NUMBER_OF_ACCIDENTALS = [0, 2, 4, -1, 1, 3, 5].deep_freeze
+
   ACCIDENTAL_ORDER_KEY_NAMES = [
     "Sharp Ionian",
     "Sharp Mixolydian",
@@ -68,6 +70,7 @@ class RomanNumerals
   private_constant :IONIAN_ACCIDENTALS
   private_constant :ACCIDENTAL_ORDER
   private_constant :ACCIDENTAL_ORDER_KEY_NAMES
+  private_constant :BORROWED_CHORDS_NUMBER_OF_ACCIDENTALS
 
   class << self
     def generate_secondary_chords_table
@@ -78,8 +81,11 @@ class RomanNumerals
       table.style = {all_separators: true}
 
       IONIAN_TYPES.each.with_index do |type, index|
+        number_of_accidentals = BORROWED_CHORDS_NUMBER_OF_ACCIDENTALS[index]
+        accidentals = accidentals_array_from_number(number_of_accidentals)
+        roman_numerals = generate_roman_numerals(IONIAN_TYPES.dup, accidentals, 0, 0, index)
+
         row_name = "x/#{to_roman_numeral(index + 1, 0, type)}"
-        roman_numerals = generate_roman_numerals(IONIAN_TYPES.dup, IONIAN_ACCIDENTALS.dup, 0, 0, index)
         table << [row_name, *roman_numerals]
       end
 
@@ -110,6 +116,28 @@ class RomanNumerals
       end
 
       return table
+    end
+
+    def accidentals_array_from_number(number_of_accidentals)
+      result = LYDIAN_ACCIDENTALS.dup
+      accidental_index = ACCIDENTAL_ORDER.dup.index(0)
+
+      update_accidentals_times = number_of_accidentals - 1
+      return result if update_accidentals_times == 0
+
+      while update_accidentals_times != 0
+        if update_accidentals_times.positive?
+          accidental_index -= 1
+          update_accidentals_times -= 1
+        else
+          accidental_index += 1
+          update_accidentals_times += 1
+        end
+
+        update_accidentals_by_degree_change!(result, ACCIDENTAL_ORDER.dup[accidental_index])
+      end
+
+      return result
     end
 
     def generate_all_roman_numerals
